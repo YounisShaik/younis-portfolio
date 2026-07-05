@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>EV Fleet Health Dashboard — Demo | Younis Shaik</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0a1420; --panel:#101d2b; --panel-2:#0d1826; --line:#1e3446;
+    --ink:#e8f2ef; --gray:#7d95a3; --green:#3ddc97; --green-dim:#1f6b52;
+    --cyan:#3ac6e0; --amber:#e0a83a; --red:#e0553a; --p1:#e0453a; --p2:#e0a83a; --p3:#3ac6e0;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--ink);}
+  .topbar{background:linear-gradient(90deg,#081118,#0f1f2c);color:#fff;padding:18px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--line);}
+  .topbar h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.3px;}
+  .topbar .sub{font-size:12px;color:var(--gray);margin-top:2px;}
+  .badge{background:var(--green-dim);color:var(--green);font-size:11px;padding:4px 10px;border-radius:20px;letter-spacing:.3px;border:1px solid var(--green);}
+  .disclaimer{background:#241a08;border-bottom:1px solid #4a3a12;color:#e0b85a;font-size:12.5px;padding:8px 28px;text-align:center;}
+  .wrap{padding:22px 28px 40px;max-width:1340px;margin:0 auto;}
+  .section-label{font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--gray);margin:24px 0 8px;font-weight:700;}
+  .hero{background:radial-gradient(circle at top left, #12301f, var(--panel));border:1px solid var(--green-dim);border-radius:14px;padding:22px 26px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  .hero-value{font-size:52px;font-weight:800;color:var(--green);line-height:1;}
+  .hero-label{font-size:13px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+  .hero-sub{font-size:13px;color:var(--ink);margin-top:8px;max-width:480px;}
+  .hero-side{display:flex;gap:24px;flex-wrap:wrap;}
+  .hero-mini .v{font-size:22px;font-weight:700;color:var(--cyan);}
+  .hero-mini .l{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;}
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;}
+  .kpi .label{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;}
+  .kpi .value{font-size:24px;font-weight:700;color:var(--ink);}
+  .kpi .delta{font-size:12px;margin-top:4px;font-weight:600;}
+  .delta.up{color:var(--green);} .delta.down{color:var(--red);} .delta.flat{color:var(--gray);}
+  .range-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .range-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;text-align:center;}
+  .range-card.rated{border:1px dashed var(--gray);}
+  .range-card .rlabel{font-size:11.5px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;}
+  .range-card .rvalue{font-size:30px;font-weight:800;color:var(--cyan);}
+  .range-card .rvalue.rated-v{color:var(--gray);}
+  .range-card .rnote{font-size:11.5px;margin-top:6px;color:var(--gray);}
+  .grid2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+  .panel h3{margin:0 0 4px;font-size:14px;color:var(--ink);}
+  .panel .hint{font-size:11.5px;color:var(--gray);margin-bottom:10px;}
+  .insights-panel{border-left:3px solid var(--green);}
+  .insight-list{margin:0;padding-left:18px;}
+  .insight-list li{margin-bottom:9px;font-size:13.5px;line-height:1.5;color:var(--ink);}
+  .insight-list li:last-child{margin-bottom:0;}
+  .insight-list strong{color:var(--green);}
+  .sev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .sev-card{border-radius:10px;padding:16px;border:1px solid var(--line);background:var(--panel-2);}
+  .sev-card .stag{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700;margin-bottom:8px;}
+  .sev-card.p1 .stag{background:rgba(224,69,58,.15);color:var(--p1);border:1px solid var(--p1);}
+  .sev-card.p2 .stag{background:rgba(224,168,58,.15);color:var(--p2);border:1px solid var(--p2);}
+  .sev-card.p3 .stag{background:rgba(58,198,224,.15);color:var(--p3);border:1px solid var(--p3);}
+  .sev-card .sval{font-size:26px;font-weight:800;color:var(--ink);}
+  .sev-card .sdesc{font-size:11.5px;color:var(--gray);margin-top:6px;}
+  footer{text-align:center;font-size:11.5px;color:var(--gray);margin-top:26px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <h1>⚡ EV Fleet Health Dashboard</h1>
+    <div class="sub">Demo project by Younis Shaik — Data Analyst / BI Analyst · EV two-wheeler fleet · 18,500 vehicles tracked</div>
+  </div>
+  <div class="badge">DEMO · SYNTHETIC DATA</div>
+</div>
+<div class="disclaimer">All figures are synthetically generated for portfolio demonstration only. This does not represent Ola Electric, River Mobility, Ather Energy, or any real company's actual data.</div>
+
+<div class="wrap">
+
+  <div class="hero" id="hero"></div>
+
+  <div class="filters" style="margin:14px 0;">
+    <select id="rangeSelect" style="padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);font-size:13px;">
+      <option value="150">Last 150 days</option>
+      <option value="90">Last 90 days</option>
+      <option value="60">Last 60 days</option>
+      <option value="30" selected>Last 30 days</option>
+    </select>
+  </div>
+
+  <div class="section-label">Range by Ride Mode — Bangalore City Driving (baseline: 120 km rated @ 100% SoC)</div>
+  <div class="range-grid" id="rangeGrid"></div>
+
+  <div class="section-label">Charging &amp; Test Readiness</div>
+  <div class="kpi-grid" id="kpiOther"></div>
+
+  <div class="section-label" id="sevLabel">Fault Severity (P1 / P2 / P3) — last 30 days</div>
+  <div class="sev-grid" id="sevGrid"></div>
+
+  <div class="panel insights-panel" style="margin-top:16px;">
+    <h3>Key Insights</h3>
+    <div class="hint">What this dashboard is telling an EV product/engineering lead, in plain terms</div>
+    <ul class="insight-list">
+      <li><strong>Degradation rate, not SoH, is the number to watch first.</strong> A battery can look fine on SoH today but be declining fast — the monthly rate predicts trouble before SoH itself looks bad.</li>
+      <li><strong>Eco mode nearly matches the rated spec, Sport mode doesn't come close.</strong> In Bangalore city driving, Eco delivers close to the rated 120 km thanks to conservative power draw and stop-go regen — Sport mode's aggressive acceleration cuts that by roughly 40%, so range claims need to be mode-specific, not a single number.</li>
+      <li><strong>P1 faults are rare but that's exactly why they need a dedicated view</strong> — buried inside a general fault count, a handful of critical safety issues would go unnoticed next to hundreds of minor ones.</li>
+      <li><strong>Test pass rate is climbing ahead of falling warranty claims</strong> — a sign that upstream QC improvements are already reducing downstream cost, a few weeks before it fully shows up in claims data.</li>
+    </ul>
+  </div>
+
+  <div class="grid2" style="grid-template-columns:1fr 1fr 1fr;">
+    <div class="panel">
+      <h3>Battery Degradation Rate Trend</h3>
+      <div class="hint">%/month — the leading health indicator for the whole fleet</div>
+      <canvas id="degChart" height="150"></canvas>
+    </div>
+    <div class="panel">
+      <h3>P1 Critical Faults — Dedicated Trend</h3>
+      <div class="hint">Shown separately — buried under P3 volume, P1 spikes would be invisible</div>
+      <canvas id="p1Chart" height="150"></canvas>
+    </div>
+    <div class="panel">
+      <h3>Fault Severity Mix (Weekly)</h3>
+      <div class="hint">P1/P2/P3 totals per week, stacked</div>
+      <canvas id="sevChart" height="150"></canvas>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="panel">
+      <h3>Range by Ride Mode — Trend</h3>
+      <div class="hint">Eco vs. Normal vs. Sport, Bangalore city driving, vs. rated 120 km</div>
+      <canvas id="rangeChart" height="140"></canvas>
+    </div>
+    <div class="panel">
+      <h3>Test Pass Rate vs. Warranty Claims</h3>
+      <div class="hint">Leading indicator (testing) vs. lagging indicator (claims)</div>
+      <canvas id="testChart" height="140"></canvas>
+    </div>
+  </div>
+
+  <footer>Illustrative demo dashboard · synthetic dataset · KPI framework modeled on real EV fleet analytics practice · built with Chart.js</footer>
+</div>
+
+<script>
+const DATA = {"dates": ["2025-01-01", "2025-01-02", "2025-01-03", "2025-01-04", "2025-01-05", "2025-01-06", "2025-01-07", "2025-01-08", "2025-01-09", "2025-01-10", "2025-01-11", "2025-01-12", "2025-01-13", "2025-01-14", "2025-01-15", "2025-01-16", "2025-01-17", "2025-01-18", "2025-01-19", "2025-01-20", "2025-01-21", "2025-01-22", "2025-01-23", "2025-01-24", "2025-01-25", "2025-01-26", "2025-01-27", "2025-01-28", "2025-01-29", "2025-01-30", "2025-01-31", "2025-02-01", "2025-02-02", "2025-02-03", "2025-02-04", "2025-02-05", "2025-02-06", "2025-02-07", "2025-02-08", "2025-02-09", "2025-02-10", "2025-02-11", "2025-02-12", "2025-02-13", "2025-02-14", "2025-02-15", "2025-02-16", "2025-02-17", "2025-02-18", "2025-02-19", "2025-02-20", "2025-02-21", "2025-02-22", "2025-02-23", "2025-02-24", "2025-02-25", "2025-02-26", "2025-02-27", "2025-02-28", "2025-03-01", "2025-03-02", "2025-03-03", "2025-03-04", "2025-03-05", "2025-03-06", "2025-03-07", "2025-03-08", "2025-03-09", "2025-03-10", "2025-03-11", "2025-03-12", "2025-03-13", "2025-03-14", "2025-03-15", "2025-03-16", "2025-03-17", "2025-03-18", "2025-03-19", "2025-03-20", "2025-03-21", "2025-03-22", "2025-03-23", "2025-03-24", "2025-03-25", "2025-03-26", "2025-03-27", "2025-03-28", "2025-03-29", "2025-03-30", "2025-03-31", "2025-04-01", "2025-04-02", "2025-04-03", "2025-04-04", "2025-04-05", "2025-04-06", "2025-04-07", "2025-04-08", "2025-04-09", "2025-04-10", "2025-04-11", "2025-04-12", "2025-04-13", "2025-04-14", "2025-04-15", "2025-04-16", "2025-04-17", "2025-04-18", "2025-04-19", "2025-04-20", "2025-04-21", "2025-04-22", "2025-04-23", "2025-04-24", "2025-04-25", "2025-04-26", "2025-04-27", "2025-04-28", "2025-04-29", "2025-04-30", "2025-05-01", "2025-05-02", "2025-05-03", "2025-05-04", "2025-05-05", "2025-05-06", "2025-05-07", "2025-05-08", "2025-05-09", "2025-05-10", "2025-05-11", "2025-05-12", "2025-05-13", "2025-05-14", "2025-05-15", "2025-05-16", "2025-05-17", "2025-05-18", "2025-05-19", "2025-05-20", "2025-05-21", "2025-05-22", "2025-05-23", "2025-05-24", "2025-05-25", "2025-05-26", "2025-05-27", "2025-05-28", "2025-05-29", "2025-05-30"], "soh": [96.35, 96.93, 96.22, 97.01, 96.98, 96.7, 96.82, 96.93, 97.12, 96.58, 97.36, 96.19, 97.3, 95.81, 96.39, 97.09, 96.62, 96.77, 96.81, 96.72, 95.84, 95.97, 96.27, 96.42, 96.39, 96.17, 96.07, 96.76, 96.24, 96.3, 96.01, 95.86, 96.19, 96.41, 96.46, 96.12, 95.37, 96.2, 95.22, 95.36, 95.53, 95.44, 96.09, 95.88, 95.92, 95.37, 95.67, 96.09, 95.06, 95.31, 95.26, 95.06, 95.51, 95.69, 95.48, 95.4, 95.93, 94.99, 95.21, 95.74, 95.46, 94.53, 96.1, 95.49, 95.36, 94.71, 94.73, 95.47, 95.07, 94.94, 95.23, 94.27, 95.04, 94.71, 95.22, 94.69, 94.47, 94.34, 94.88, 93.95, 95.24, 94.53, 94.69, 93.78, 94.1, 95.74, 94.45, 94.58, 93.74, 93.51, 93.95, 94.65, 94.63, 93.81, 93.93, 94.13, 93.16, 94.15, 94.37, 94.39, 94.05, 93.76, 93.99, 93.73, 93.37, 93.62, 93.64, 94.73, 93.46, 93.71, 93.58, 93.28, 93.76, 93.03, 93.31, 93.55, 93.63, 93.89, 93.8, 92.68, 94.13, 93.2, 95.23, 94.01, 92.95, 93.15, 93.37, 94.04, 93.38, 92.91, 93.14, 93.0, 93.01, 93.26, 93.35, 93.16, 92.43, 92.52, 92.76, 92.83, 92.52, 93.05, 92.46, 92.43, 92.29, 92.69, 92.22, 92.78, 92.59, 92.7], "degradation": [0.54, 0.53, 0.5, 0.57, 0.61, 0.64, 0.55, 0.47, 0.49, 0.59, 0.56, 0.49, 0.59, 0.69, 0.46, 0.58, 0.54, 0.53, 0.49, 0.36, 0.45, 0.54, 0.47, 0.47, 0.7, 0.48, 0.67, 0.48, 0.5, 0.55, 0.62, 0.59, 0.54, 0.59, 0.65, 0.57, 0.58, 0.45, 0.5, 0.58, 0.65, 0.44, 0.56, 0.59, 0.62, 0.46, 0.49, 0.58, 0.48, 0.55, 0.55, 0.58, 0.53, 0.58, 0.55, 0.61, 0.55, 0.5, 0.57, 0.56, 0.54, 0.64, 0.55, 0.53, 0.5, 0.43, 0.53, 0.54, 0.58, 0.54, 0.48, 0.57, 0.54, 0.53, 0.63, 0.58, 0.58, 0.52, 0.48, 0.53, 0.53, 0.55, 0.6, 0.6, 0.58, 0.59, 0.49, 0.62, 0.55, 0.57, 0.6, 0.55, 0.45, 0.49, 0.58, 0.5, 0.43, 0.55, 0.45, 0.56, 0.52, 0.61, 0.48, 0.48, 0.61, 0.47, 0.59, 0.58, 0.75, 0.49, 0.58, 0.45, 0.58, 0.46, 0.55, 0.55, 0.61, 0.54, 0.56, 0.55, 0.55, 0.5, 0.58, 0.53, 0.57, 0.49, 0.55, 0.58, 0.54, 0.51, 0.48, 0.53, 0.54, 0.55, 0.51, 0.6, 0.59, 0.57, 0.54, 0.53, 0.54, 0.55, 0.46, 0.53, 0.54, 0.47, 0.47, 0.51, 0.68, 0.62], "rated_range": [120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0, 120.0], "eco_range": [120.3, 126.0, 122.1, 121.0, 123.4, 122.8, 118.3, 122.5, 120.5, 117.2, 123.8, 119.7, 119.0, 115.6, 117.8, 121.4, 118.5, 123.1, 119.9, 120.7, 118.8, 116.6, 120.6, 121.4, 118.9, 116.4, 121.8, 126.2, 116.2, 119.4, 120.0, 121.1, 117.7, 120.3, 121.5, 122.0, 122.2, 118.1, 116.6, 116.7, 118.0, 118.2, 117.5, 122.4, 115.9, 114.5, 118.4, 119.9, 119.2, 116.5, 115.3, 119.1, 115.9, 119.6, 120.0, 117.1, 120.7, 118.6, 117.9, 121.2, 119.0, 119.6, 119.9, 120.5, 118.0, 116.1, 121.3, 115.9, 115.9, 119.1, 119.2, 116.2, 116.8, 114.3, 118.6, 118.3, 117.2, 118.8, 116.6, 116.2, 119.6, 117.6, 116.7, 116.7, 116.8, 119.4, 117.1, 116.4, 114.9, 116.3, 118.2, 120.6, 120.9, 119.5, 119.5, 115.8, 115.9, 119.9, 118.0, 119.3, 116.8, 118.2, 114.5, 120.1, 114.1, 115.5, 116.7, 115.7, 116.3, 117.8, 119.4, 111.2, 121.9, 113.4, 113.2, 116.3, 118.3, 114.8, 117.0, 114.7, 120.5, 112.6, 118.6, 111.5, 118.4, 117.7, 118.3, 115.3, 114.6, 115.4, 115.7, 112.7, 116.3, 120.0, 114.8, 113.4, 120.4, 115.1, 113.5, 113.3, 117.7, 117.8, 115.1, 113.7, 114.1, 112.2, 114.4, 113.3, 112.5, 117.2], "normal_range": [93.8, 99.7, 89.8, 95.7, 98.2, 96.2, 94.5, 96.9, 97.9, 95.0, 101.6, 89.9, 91.7, 97.0, 98.2, 99.3, 97.9, 97.4, 97.0, 96.7, 97.7, 96.0, 91.9, 98.8, 95.8, 96.3, 97.1, 97.0, 93.9, 96.2, 98.0, 94.4, 96.4, 97.1, 96.1, 92.4, 95.7, 94.4, 94.6, 93.8, 97.7, 95.1, 95.0, 95.8, 95.2, 92.8, 99.2, 89.9, 96.0, 96.5, 93.9, 94.8, 94.8, 95.9, 95.9, 94.6, 97.9, 99.1, 98.0, 95.4, 88.4, 93.0, 93.5, 96.2, 99.1, 91.0, 91.5, 93.8, 88.6, 91.4, 99.0, 96.7, 93.4, 96.2, 95.7, 92.7, 91.5, 93.7, 95.2, 94.2, 94.7, 97.8, 92.4, 98.3, 93.2, 93.4, 94.3, 94.8, 93.1, 91.8, 95.1, 94.2, 92.3, 95.0, 94.8, 92.0, 93.0, 94.7, 94.2, 93.7, 91.3, 94.3, 92.4, 99.0, 93.1, 92.8, 96.8, 100.2, 95.2, 94.5, 92.2, 95.4, 96.0, 91.5, 91.7, 96.5, 95.0, 94.8, 96.6, 96.2, 95.7, 91.5, 94.3, 97.6, 92.2, 92.9, 95.2, 95.5, 91.0, 87.4, 87.2, 97.3, 93.3, 92.2, 97.3, 93.9, 90.1, 92.3, 90.6, 89.7, 94.7, 94.1, 92.6, 93.9, 94.4, 92.4, 92.6, 87.1, 91.2, 89.5], "sport_range": [72.0, 71.8, 66.6, 67.8, 66.4, 66.3, 68.5, 72.8, 67.3, 67.9, 73.6, 66.5, 65.9, 67.3, 65.0, 69.2, 73.8, 72.3, 73.2, 65.8, 64.2, 66.1, 66.5, 68.2, 72.5, 68.9, 69.0, 71.0, 69.6, 69.6, 72.5, 66.6, 66.3, 70.0, 69.7, 66.3, 69.8, 69.0, 67.8, 67.8, 71.3, 72.3, 72.6, 70.0, 73.4, 66.5, 69.1, 72.6, 70.8, 72.2, 65.3, 68.9, 65.7, 70.9, 73.6, 69.6, 69.1, 69.9, 67.6, 72.2, 66.7, 66.1, 71.4, 74.1, 68.8, 66.3, 65.7, 68.7, 72.9, 69.1, 67.5, 71.6, 67.9, 67.9, 69.1, 69.2, 70.1, 69.0, 65.5, 65.9, 69.7, 67.1, 71.4, 67.0, 70.9, 72.4, 67.7, 65.9, 64.7, 67.8, 69.5, 66.3, 69.6, 66.2, 68.1, 68.9, 64.9, 69.3, 69.4, 69.5, 70.1, 66.5, 67.0, 72.1, 69.0, 65.0, 71.0, 67.3, 67.9, 70.1, 66.1, 70.2, 71.8, 64.6, 67.9, 65.6, 72.9, 72.0, 67.6, 63.9, 68.6, 66.4, 67.8, 68.7, 68.7, 69.9, 72.7, 66.2, 66.6, 70.9, 67.2, 67.2, 68.3, 64.0, 66.8, 70.2, 65.4, 70.0, 65.5, 66.9, 65.4, 64.3, 67.8, 65.5, 67.2, 71.3, 65.5, 65.6, 68.3, 66.1], "charge_success": [94.2, 93.1, 96.2, 97.1, 92.5, 94.8, 94.5, 95.0, 93.9, 95.5, 97.1, 94.3, 94.3, 95.3, 95.0, 95.6, 93.4, 95.0, 96.6, 94.8, 94.6, 95.6, 95.4, 94.2, 94.9, 93.7, 95.2, 96.3, 94.0, 93.2, 93.5, 93.7, 96.5, 94.3, 94.0, 95.6, 96.2, 95.8, 94.8, 94.2, 96.6, 94.7, 94.9, 95.0, 93.8, 95.8, 97.3, 96.7, 95.9, 95.5, 96.0, 95.2, 94.6, 95.5, 96.3, 95.8, 96.2, 94.4, 93.1, 96.5, 94.2, 94.1, 95.6, 96.5, 93.5, 96.5, 96.3, 96.3, 95.1, 96.0, 94.2, 95.1, 96.2, 93.7, 94.5, 96.8, 97.2, 95.2, 97.9, 97.7, 95.3, 98.4, 94.9, 95.9, 96.1, 97.2, 95.4, 97.1, 96.5, 95.4, 96.5, 97.3, 97.9, 98.5, 97.8, 97.4, 97.3, 96.6, 97.2, 96.6, 95.4, 96.4, 96.4, 97.1, 96.5, 97.1, 97.7, 94.9, 97.7, 97.9, 97.9, 97.6, 96.7, 98.3, 97.8, 97.0, 96.7, 95.9, 95.5, 96.2, 99.0, 97.7, 97.2, 97.6, 94.3, 97.5, 96.7, 97.8, 96.5, 96.2, 98.0, 96.5, 97.8, 97.3, 97.7, 98.1, 97.4, 96.9, 98.2, 98.4, 96.2, 97.1, 95.6, 97.9, 96.6, 97.4, 96.7, 98.5, 96.2, 98.1], "test_pass": [90.2, 89.9, 91.4, 92.2, 91.3, 90.2, 91.6, 91.4, 89.1, 89.5, 87.1, 91.3, 90.4, 91.9, 92.6, 93.0, 91.3, 90.4, 93.6, 93.5, 92.6, 90.2, 90.7, 91.4, 91.0, 90.7, 89.6, 91.4, 91.3, 89.6, 90.4, 89.9, 92.3, 93.2, 92.9, 93.1, 90.3, 93.5, 93.1, 90.6, 92.4, 95.9, 89.8, 91.4, 90.5, 90.7, 92.8, 93.1, 92.8, 92.3, 92.2, 93.6, 92.0, 92.3, 93.0, 92.3, 93.2, 93.2, 89.7, 94.6, 95.6, 92.6, 92.5, 93.7, 90.9, 93.7, 92.5, 94.0, 89.7, 91.5, 93.6, 93.2, 94.1, 94.7, 91.7, 93.3, 92.3, 94.1, 93.6, 93.7, 92.9, 93.4, 93.0, 92.0, 91.2, 96.0, 93.6, 92.0, 94.1, 93.6, 95.1, 93.2, 93.1, 93.3, 95.1, 94.3, 95.8, 94.4, 94.9, 95.7, 95.6, 93.9, 96.0, 93.9, 95.8, 94.6, 95.4, 97.3, 94.6, 94.2, 97.1, 95.1, 95.2, 94.5, 94.6, 96.6, 95.8, 94.8, 96.5, 94.8, 94.3, 92.9, 95.0, 94.5, 92.8, 94.1, 94.0, 95.3, 97.2, 94.4, 94.3, 95.2, 94.1, 95.3, 95.6, 98.2, 95.3, 95.1, 96.0, 93.0, 96.2, 96.0, 93.2, 95.7, 96.3, 95.7, 93.4, 96.8, 96.3, 96.8], "warranty": [6.56, 7.5, 7.13, 6.36, 6.92, 5.79, 7.71, 7.04, 6.14, 6.9, 5.9, 6.93, 6.36, 8.01, 6.63, 6.41, 5.85, 6.93, 7.25, 7.25, 6.98, 5.66, 6.69, 6.68, 6.35, 7.39, 7.73, 7.02, 5.28, 7.09, 7.53, 6.22, 6.81, 7.31, 4.73, 5.37, 5.63, 7.03, 5.74, 6.57, 6.05, 7.04, 5.72, 5.88, 5.99, 5.98, 7.13, 6.25, 5.09, 5.81, 6.9, 7.81, 7.21, 5.16, 5.75, 6.59, 5.38, 6.23, 5.81, 4.09, 6.28, 6.9, 6.31, 5.47, 5.52, 6.9, 5.6, 6.47, 6.2, 5.38, 6.57, 5.55, 6.19, 6.68, 5.97, 5.48, 5.16, 6.69, 4.44, 4.97, 5.9, 5.95, 6.25, 5.88, 4.37, 5.88, 6.09, 5.91, 5.62, 5.32, 4.63, 4.2, 4.45, 5.56, 5.68, 4.78, 6.61, 5.91, 5.52, 5.02, 4.91, 4.78, 3.75, 5.66, 5.23, 5.13, 5.33, 6.62, 5.65, 5.78, 5.16, 4.32, 3.89, 5.56, 4.97, 3.87, 4.63, 4.38, 4.42, 4.32, 5.25, 6.22, 4.84, 4.51, 4.65, 4.98, 4.57, 3.84, 4.18, 4.08, 4.98, 4.52, 3.37, 4.54, 4.06, 4.35, 6.06, 4.53, 5.7, 3.92, 4.01, 4.01, 4.37, 4.78, 4.47, 3.88, 3.86, 4.45, 4.83, 3.34], "p1": [0, 1, 0, 0, 0, 1, 0, 0, 1, 2, 1, 0, 0, 1, 0, 2, 1, 0, 0, 0, 1, 1, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 2, 0, 1, 0, 0, 0, 0, 0, 2, 2, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1], "p2": [0, 4, 1, 3, 6, 2, 2, 1, 3, 4, 5, 3, 1, 2, 3, 4, 2, 4, 4, 7, 3, 6, 0, 3, 4, 4, 3, 4, 0, 5, 7, 3, 2, 4, 4, 3, 1, 3, 3, 3, 2, 7, 0, 3, 2, 2, 2, 1, 4, 3, 3, 1, 3, 3, 7, 1, 1, 2, 4, 3, 4, 1, 2, 4, 2, 2, 0, 1, 2, 3, 0, 6, 1, 1, 0, 3, 3, 4, 2, 4, 2, 2, 1, 2, 3, 1, 2, 3, 1, 2, 4, 3, 2, 0, 2, 7, 3, 2, 1, 3, 1, 2, 3, 1, 1, 1, 1, 2, 3, 3, 5, 1, 2, 5, 3, 4, 1, 3, 2, 3, 3, 3, 3, 4, 3, 2, 1, 5, 1, 3, 3, 2, 2, 0, 5, 6, 1, 2, 4, 5, 4, 4, 4, 3, 2, 4, 3, 2, 2, 3], "p3": [10, 5, 4, 15, 13, 7, 12, 6, 9, 8, 13, 7, 10, 5, 6, 7, 6, 9, 9, 5, 8, 4, 10, 9, 3, 8, 13, 5, 5, 6, 4, 10, 6, 9, 9, 11, 11, 4, 13, 9, 5, 10, 8, 6, 9, 3, 8, 9, 10, 11, 4, 4, 7, 11, 5, 6, 11, 5, 7, 6, 9, 7, 5, 5, 10, 10, 4, 10, 7, 10, 7, 5, 8, 9, 9, 3, 9, 11, 4, 5, 12, 7, 5, 8, 12, 5, 5, 5, 5, 5, 14, 6, 7, 9, 12, 7, 9, 6, 2, 7, 7, 6, 10, 6, 10, 8, 5, 6, 4, 8, 6, 7, 11, 10, 5, 8, 14, 5, 4, 9, 9, 8, 9, 3, 12, 10, 8, 6, 10, 6, 6, 3, 8, 8, 6, 10, 3, 7, 4, 8, 14, 6, 7, 2, 4, 15, 5, 11, 5, 7], "p1_resolution_hrs": [30.6, 31.5, 28.3, 30.7, 30.7, 24.5, 30.0, 25.3, 33.1, 27.2, 29.7, 31.7, 26.1, 26.2, 26.9, 32.6, 25.1, 27.7, 27.9, 27.6, 27.6, 26.0, 25.1, 26.5, 22.1, 31.7, 25.3, 25.8, 25.0, 27.6, 23.7, 22.7, 27.6, 26.3, 24.1, 29.0, 26.6, 26.7, 23.7, 23.1, 25.2, 23.0, 25.1, 26.8, 27.3, 24.9, 24.7, 25.1, 24.9, 21.9, 20.3, 26.7, 23.3, 22.7, 25.3, 26.2, 26.7, 23.5, 20.3, 26.6, 21.1, 23.7, 22.0, 24.8, 30.4, 27.2, 24.1, 22.1, 24.2, 22.3, 22.2, 26.1, 21.4, 25.1, 22.5, 21.7, 21.5, 22.2, 22.0, 19.3, 22.9, 25.0, 23.6, 21.5, 23.6, 19.0, 19.0, 18.3, 18.2, 18.4, 20.4, 19.9, 19.1, 21.6, 19.4, 22.4, 23.7, 18.3, 24.2, 18.8, 19.0, 21.1, 15.0, 15.8, 18.5, 18.5, 14.2, 19.9, 17.1, 19.0, 16.9, 21.2, 15.9, 15.7, 12.9, 17.6, 19.5, 21.2, 17.3, 18.4, 15.0, 18.7, 18.7, 17.4, 14.1, 13.7, 18.5, 11.9, 20.1, 12.2, 17.8, 10.8, 16.6, 18.6, 18.0, 20.1, 20.0, 14.4, 11.3, 14.4, 11.1, 15.8, 11.8, 12.9, 11.8, 13.7, 14.3, 14.9, 18.0, 14.5], "fleet_size": 18500, "weekly_labels": ["Dec 30", "Jan 06", "Jan 13", "Jan 20", "Jan 27", "Feb 03", "Feb 10", "Feb 17", "Feb 24", "Mar 03", "Mar 10", "Mar 17", "Mar 24", "Mar 31", "Apr 07", "Apr 14", "Apr 21", "Apr 28", "May 05", "May 12", "May 19", "May 26"], "weekly_p1": [1, 5, 4, 4, 1, 1, 1, 4, 3, 2, 0, 4, 1, 3, 1, 0, 2, 4, 4, 4, 2, 4], "weekly_p2": [14, 20, 20, 27, 24, 21, 18, 18, 22, 12, 13, 20, 13, 20, 15, 12, 21, 21, 18, 18, 26, 14], "weekly_p3": [47, 62, 52, 47, 49, 66, 49, 56, 49, 51, 55, 51, 45, 60, 47, 47, 61, 47, 58, 45, 45, 43]};
+function avg(arr){ return arr.reduce((a,b)=>a+b,0)/arr.length; }
+function last(arr,n){ return arr.slice(-n); }
+function sum(arr){ return arr.reduce((a,b)=>a+b,0); }
+
+function renderHero(range){
+  const deg = last(DATA.degradation,range);
+  const soh = last(DATA.soh,range);
+  const sohDeclineTotal = (DATA.soh[DATA.soh.length-range]-DATA.soh[DATA.soh.length-1]).toFixed(1);
+  document.getElementById('hero').innerHTML = `
+    <div>
+      <div class="hero-label">Battery Degradation Rate — Top Priority Metric</div>
+      <div class="hero-value">${avg(deg).toFixed(2)}%<span style="font-size:20px;color:var(--gray);"> / month</span></div>
+      <div class="hero-sub">This is the number that predicts battery trouble before SoH itself looks bad — it drives warranty policy and replacement timing decisions.<br><span style="color:var(--gray);">Industry typical range: 0.4–0.6%/month · this fleet: ${avg(deg).toFixed(2)}%</span></div>
+    </div>
+    <div class="hero-side">
+      <div class="hero-mini"><div class="v">${avg(soh).toFixed(1)}%</div><div class="l">Current Fleet SoH</div></div>
+      <div class="hero-mini"><div class="v">${sohDeclineTotal} pts</div><div class="l">SoH Decline (period)</div></div>
+      <div class="hero-mini"><div class="v">${DATA.fleet_size.toLocaleString()}</div><div class="l">Vehicles Tracked</div></div>
+    </div>
+  `;
+}
+
+function renderRangeGrid(range){
+  const rated = DATA.rated_range[0];
+  const eco = avg(last(DATA.eco_range,range));
+  const normal = avg(last(DATA.normal_range,range));
+  const sport = avg(last(DATA.sport_range,range));
+  const cards = [
+    {label:'Rated (100% SoC spec)', value: rated.toFixed(0)+' km', note:'manufacturer baseline (IDC test cycle)', rated:true},
+    {label:'Eco Mode', value: eco.toFixed(1)+' km', note: (((eco-rated)/rated)*100).toFixed(0)+'% vs rated · conservative power + city regen'},
+    {label:'Normal Mode', value: normal.toFixed(1)+' km', note: (((normal-rated)/rated)*100).toFixed(0)+'% vs rated · everyday Bangalore city use'},
+    {label:'Sport Mode', value: sport.toFixed(1)+' km', note: (((sport-rated)/rated)*100).toFixed(0)+'% vs rated · aggressive accel in stop-go traffic'},
+  ];
+  document.getElementById('rangeGrid').innerHTML = cards.map(c=>`
+    <div class="range-card ${c.rated?'rated':''}">
+      <div class="rlabel">${c.label}</div>
+      <div class="rvalue ${c.rated?'rated-v':''}">${c.value}</div>
+      <div class="rnote">${c.note}</div>
+    </div>`).join('');
+}
+
+function renderOtherKPIs(range){
+  const cs = last(DATA.charge_success,range), tp = last(DATA.test_pass,range), wc = last(DATA.warranty,range), p1r = last(DATA.p1_resolution_hrs,range);
+  const kpis = [
+    {label:'Charging Success Rate', value: avg(cs).toFixed(1)+'%', delta:'target > 95%', dir: avg(cs)>=95?'up':'down'},
+    {label:'Test Pass Rate', value: avg(tp).toFixed(1)+'%', delta:'leading indicator', dir: avg(tp)>=90?'up':'down'},
+    {label:'Warranty Claims', value: avg(wc).toFixed(1)+' /1,000', delta:'lagging indicator', dir: avg(wc)<=6?'up':'down'},
+    {label:'Avg P1 Resolution Time', value: avg(p1r).toFixed(1)+' hrs', delta:'time to fix critical faults', dir: avg(p1r)<=6?'up':'down'},
+  ];
+  document.getElementById('kpiOther').innerHTML = kpis.map(k=>`<div class="kpi"><div class="label">${k.label}</div><div class="value">${k.value}</div><div class="delta ${k.dir}">${k.delta}</div></div>`).join('');
+}
+
+function renderSeverity(range){
+  const p1 = sum(last(DATA.p1,range)), p2 = sum(last(DATA.p2,range)), p3 = sum(last(DATA.p3,range));
+  document.getElementById('sevLabel').textContent = `Fault Severity (P1 / P2 / P3) — last ${range} days`;
+  const cards = [
+    {tag:'P1 · CRITICAL', cls:'p1', val:p1, desc:'Safety-relevant — thermal events, sudden power loss, brake faults. Treated as stop-ship / immediate action.'},
+    {tag:'P2 · MAJOR', cls:'p2', val:p2, desc:'Causes vehicle downtime — motor controller, charging failures. Fast-tracked fix, not an emergency.'},
+    {tag:'P3 · MINOR', cls:'p3', val:p3, desc:'Cosmetic or low-impact — display/IoT glitches, sensor noise. Batched into next update cycle.'},
+  ];
+  document.getElementById('sevGrid').innerHTML = cards.map(c=>`
+    <div class="sev-card ${c.cls}">
+      <span class="stag">${c.tag}</span>
+      <div class="sval">${c.val}</div>
+      <div class="sdesc">${c.desc}</div>
+    </div>`).join('');
+}
+
+function weeklyAgg(datesArr, valsArr){
+  // group into 7-day buckets from the end
+  const weeks = [];
+  const labels = [];
+  for(let i=valsArr.length; i>0; i-=7){
+    const start = Math.max(0, i-7);
+    const chunk = valsArr.slice(start, i);
+    weeks.unshift(chunk.reduce((a,b)=>a+b,0));
+    labels.unshift(datesArr[i-1]);
+  }
+  return {labels, values: weeks};
+}
+
+let charts = {};
+function destroyAll(){ Object.values(charts).forEach(c=>c && c.destroy()); }
+
+function renderCharts(range){
+  destroyAll();
+  const dates = last(DATA.dates, range);
+  const deg = last(DATA.degradation, range);
+  const p1 = last(DATA.p1, range);
+  const p2 = last(DATA.p2, range);
+  const p3 = last(DATA.p3, range);
+  const ecoR = last(DATA.eco_range, range);
+  const normalR = last(DATA.normal_range, range);
+  const sportR = last(DATA.sport_range, range);
+  const ratedR = last(DATA.rated_range, range);
+  const testP = last(DATA.test_pass, range);
+  const warr = last(DATA.warranty, range);
+
+  charts.deg = new Chart(document.getElementById('degChart'), {
+    type:'line',
+    data:{ labels: dates, datasets:[{ label:'Degradation %/month', data: deg, borderColor:'#3ddc97', backgroundColor:'rgba(61,220,151,0.08)', fill:true, pointRadius:0, pointHitRadius:12, tension:.3, borderWidth:2 }]},
+    options:{ responsive:true, interaction:{mode:'index',intersect:false}, plugins:{legend:{display:false}, tooltip:{enabled:true}}, scales:{ x:{ticks:{color:'#7d95a3',maxTicksLimit:6}, grid:{color:'#1e3446'}}, y:{ticks:{color:'#7d95a3'}, grid:{color:'#1e3446'}} } }
+  });
+
+  charts.p1 = new Chart(document.getElementById('p1Chart'), {
+    type:'bar',
+    data:{ labels: dates, datasets:[{ label:'P1 Faults', data: p1, backgroundColor:'#e0453a' }]},
+    options:{ responsive:true, interaction:{mode:'index',intersect:false}, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#7d95a3',maxTicksLimit:6}, grid:{display:false}}, y:{ticks:{color:'#7d95a3', stepSize:1}, grid:{color:'#1e3446'}, beginAtZero:true} } }
+  });
+
+  const wP1 = weeklyAgg(dates, p1), wP2 = weeklyAgg(dates, p2), wP3 = weeklyAgg(dates, p3);
+  charts.sev = new Chart(document.getElementById('sevChart'), {
+    type:'bar',
+    data:{ labels: wP1.labels, datasets:[
+      { label:'P1', data: wP1.values, backgroundColor:'#e0453a' },
+      { label:'P2', data: wP2.values, backgroundColor:'#e0a83a' },
+      { label:'P3', data: wP3.values, backgroundColor:'#3ac6e0' },
+    ]},
+    options:{ responsive:true, interaction:{mode:'index',intersect:false}, plugins:{legend:{labels:{color:'#e8f2ef'}}}, scales:{ x:{stacked:true, ticks:{color:'#7d95a3',maxTicksLimit:6}, grid:{display:false}}, y:{stacked:true, ticks:{color:'#7d95a3'}, grid:{color:'#1e3446'}} } }
+  });
+
+  charts.range = new Chart(document.getElementById('rangeChart'), {
+    type:'line',
+    data:{ labels: dates, datasets:[
+      { label:'Eco', data: ecoR, borderColor:'#3ddc97', pointRadius:0, pointHitRadius:12, tension:.3, borderWidth:2 },
+      { label:'Normal', data: normalR, borderColor:'#3ac6e0', pointRadius:0, pointHitRadius:12, tension:.3, borderWidth:2 },
+      { label:'Sport', data: sportR, borderColor:'#e0a83a', pointRadius:0, pointHitRadius:12, tension:.3, borderWidth:2 },
+      { label:'Rated (120 km)', data: ratedR, borderColor:'#7d95a3', borderDash:[5,5], pointRadius:0, pointHitRadius:12, borderWidth:1.5 },
+    ]},
+    options:{ responsive:true, interaction:{mode:'index',intersect:false}, plugins:{legend:{labels:{color:'#e8f2ef'}}}, scales:{ x:{ticks:{color:'#7d95a3',maxTicksLimit:6}, grid:{color:'#1e3446'}}, y:{ticks:{color:'#7d95a3'}, grid:{color:'#1e3446'}, title:{display:true,text:'km',color:'#7d95a3'} } } }
+  });
+
+  charts.test = new Chart(document.getElementById('testChart'), {
+    type:'line',
+    data:{ labels: dates, datasets:[
+      { label:'Test Pass %', data: testP, borderColor:'#3ddc97', yAxisID:'y', pointRadius:0, pointHitRadius:12, tension:.3, borderWidth:2 },
+      { label:'Warranty Claims /1k', data: warr, borderColor:'#e0453a', yAxisID:'y1', pointRadius:0, pointHitRadius:12, tension:.3, borderWidth:2 }
+    ]},
+    options:{ responsive:true, interaction:{mode:'index',intersect:false}, plugins:{legend:{labels:{color:'#e8f2ef'}}},
+      scales:{ x:{ticks:{color:'#7d95a3',maxTicksLimit:6}, grid:{color:'#1e3446'}}, y:{position:'left', ticks:{color:'#7d95a3'}, grid:{color:'#1e3446'}}, y1:{position:'right', ticks:{color:'#7d95a3'}, grid:{drawOnChartArea:false}} } }
+  });
+}
+
+function refresh(){
+  const range = parseInt(document.getElementById('rangeSelect').value);
+  renderHero(range);
+  renderRangeGrid(range);
+  renderOtherKPIs(range);
+  renderSeverity(range);
+  renderCharts(range);
+}
+document.getElementById('rangeSelect').addEventListener('change', refresh);
+refresh();
+</script>
+</body>
+</html>

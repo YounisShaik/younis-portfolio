@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Quick-Commerce Ops &amp; Growth Dashboard — Demo | Younis Shaik</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --navy:#12263a; --navy-2:#1f3b57; --teal:#0e7c86; --amber:#c9822f;
+    --bg:#f5f7f9; --card:#ffffff; --ink:#1a1a1a; --gray:#5b6b76; --line:#e3e8eb;
+    --good:#1f8a55; --warn:#b8862f; --bad:#c04a4a;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--ink);}
+  .topbar{background:var(--navy);color:#fff;padding:18px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+  .topbar h1{font-size:18px;margin:0;font-weight:600;letter-spacing:.2px;}
+  .topbar .sub{font-size:12px;color:#9fb3c4;margin-top:2px;}
+  .badge{background:var(--teal);color:#fff;font-size:11px;padding:4px 10px;border-radius:20px;letter-spacing:.3px;}
+  .disclaimer{background:#fff8e6;border-bottom:1px solid #f0dca0;color:#7a5b0b;font-size:12.5px;padding:8px 28px;text-align:center;}
+  .wrap{padding:22px 28px 40px;max-width:1320px;margin:0 auto;}
+  .section-label{font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:22px 0 8px;font-weight:700;}
+  .filters{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+  .filters select{padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;font-size:13px;color:var(--ink);}
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 16px 14px;}
+  .kpi .label{font-size:11.5px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;}
+  .kpi .value{font-size:24px;font-weight:700;color:var(--navy-2);}
+  .kpi .delta{font-size:12px;margin-top:4px;font-weight:600;}
+  .delta.up{color:var(--good);} .delta.down{color:var(--bad);} .delta.flat{color:var(--gray);}
+  .grid2{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-top:16px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+  .panel h3{margin:0 0 4px;font-size:14px;color:var(--navy-2);}
+  .panel .hint{font-size:11.5px;color:var(--gray);margin-bottom:10px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);}
+  th{color:var(--gray);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.3px;}
+  .tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;}
+  .tag.good{background:#e7f5ec;color:var(--good);}
+  .tag.warn{background:#fbf1de;color:var(--warn);}
+  .tag.bad{background:#fbe9e9;color:var(--bad);}
+  .insights-panel{border-left:4px solid var(--teal);background:#fbfefe;}
+  .insight-list{margin:0;padding-left:18px;}
+  .insight-list li{margin-bottom:9px;font-size:13.5px;line-height:1.5;color:var(--ink);}
+  .insight-list li:last-child{margin-bottom:0;}
+  .insight-list strong{color:var(--navy-2);}
+  footer{text-align:center;font-size:11.5px;color:var(--gray);margin-top:26px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <h1>Quick-Commerce Ops &amp; Growth Dashboard</h1>
+    <div class="sub">Demo project by Younis Shaik — Data Analyst / BI Analyst · modeled on Bangalore quick-commerce operations</div>
+  </div>
+  <div class="badge">DEMO · SYNTHETIC DATA</div>
+</div>
+<div class="disclaimer">All figures are synthetically generated for portfolio demonstration only. This does not represent Swiggy, Zomato, Blinkit, Zepto, Instamart, BigBasket, or any real company's actual data.</div>
+
+<div class="wrap">
+
+  <div class="filters">
+    <select id="rangeSelect">
+      <option value="150">Last 150 days</option>
+      <option value="60">Last 60 days</option>
+      <option value="30">Last 30 days</option>
+    </select>
+  </div>
+
+  <div class="section-label">Growth &amp; Unit Economics</div>
+  <div class="kpi-grid" id="kpiGrowth"></div>
+
+  <div class="section-label">Delivery Speed &amp; Fulfillment</div>
+  <div class="kpi-grid" id="kpiOps"></div>
+
+  <div class="panel insights-panel" style="margin-top:16px;">
+    <h3>Key Insights</h3>
+    <div class="hint">What this dashboard is telling a growth/ops lead, in plain terms</div>
+    <ul class="insight-list">
+      <li><strong>Growth is healthy, not just big.</strong> GMV and orders are both trending up, and delivery time and on-time % are improving in parallel — scaling usually breaks ops, but that isn't happening here.</li>
+      <li><strong>Retention is being earned, not bought.</strong> Discount burn (% of GMV) is trending down while CSAT and repeat order rate are trending up — customers are staying because the experience is better, not because of coupons.</li>
+      <li><strong>Inventory is improving and it's paying off.</strong> Falling stockout rate lines up with rising repeat rate — fewer "out of stock" moments is likely driving some of the retention gain.</li>
+      <li><strong>Koramangala needs riders, not marketing.</strong> It has the highest order volume but is flagged "Needs Intervention" — delivery time is over target despite strong repeat rate, pointing to a capacity problem, not a demand problem.</li>
+      <li><strong>HSR Layout and Whitefield need inventory attention</strong> — both show elevated stockout rates that are likely capping their repeat-rate upside.</li>
+    </ul>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h3>GMV &amp; Order Volume Trend</h3>
+      <div class="hint">Daily gross merchandise value and order count</div>
+      <canvas id="gmvChart" height="110"></canvas>
+    </div>
+    <div class="panel">
+      <h3>Zone Order Share (30d)</h3>
+      <div class="hint">Bangalore dark-store zones</div>
+      <canvas id="zoneChart" height="150"></canvas>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="panel">
+      <h3>Delivery Time vs On-Time %</h3>
+      <div class="hint">Speed is the core product in quick-commerce — this pair drives most operational decisions</div>
+      <canvas id="deliveryChart" height="140"></canvas>
+    </div>
+    <div class="panel">
+      <h3>Stockout % vs Repeat Order Rate</h3>
+      <div class="hint">Inventory health directly drives customer retention</div>
+      <canvas id="stockoutChart" height="140"></canvas>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="panel">
+      <h3>Contribution Margin per Order</h3>
+      <div class="hint">The number that decides whether growth is profitable growth</div>
+      <canvas id="marginChart" height="140"></canvas>
+    </div>
+    <div class="panel">
+      <h3>Discount Burn (% of GMV) vs CSAT</h3>
+      <div class="hint">Are we buying growth with discounts, or earning it with experience?</div>
+      <canvas id="discountChart" height="140"></canvas>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:16px;">
+    <h3>Zone Scorecard — Bangalore Dark Stores</h3>
+    <div class="hint">Which zones need intervention vs. which are performing</div>
+    <table>
+      <thead><tr><th>Zone</th><th>Orders (30d)</th><th>Avg Delivery</th><th>Stockout %</th><th>Repeat Rate</th><th>CSAT</th><th>Status</th></tr></thead>
+      <tbody id="zoneTable"></tbody>
+    </table>
+  </div>
+
+  <footer>Illustrative demo dashboard · synthetic dataset · KPI framework modeled on real quick-commerce operating metrics · built with Chart.js</footer>
+</div>
+
+<script>
+const DATA = {"dates": ["2025-01-01", "2025-01-02", "2025-01-03", "2025-01-04", "2025-01-05", "2025-01-06", "2025-01-07", "2025-01-08", "2025-01-09", "2025-01-10", "2025-01-11", "2025-01-12", "2025-01-13", "2025-01-14", "2025-01-15", "2025-01-16", "2025-01-17", "2025-01-18", "2025-01-19", "2025-01-20", "2025-01-21", "2025-01-22", "2025-01-23", "2025-01-24", "2025-01-25", "2025-01-26", "2025-01-27", "2025-01-28", "2025-01-29", "2025-01-30", "2025-01-31", "2025-02-01", "2025-02-02", "2025-02-03", "2025-02-04", "2025-02-05", "2025-02-06", "2025-02-07", "2025-02-08", "2025-02-09", "2025-02-10", "2025-02-11", "2025-02-12", "2025-02-13", "2025-02-14", "2025-02-15", "2025-02-16", "2025-02-17", "2025-02-18", "2025-02-19", "2025-02-20", "2025-02-21", "2025-02-22", "2025-02-23", "2025-02-24", "2025-02-25", "2025-02-26", "2025-02-27", "2025-02-28", "2025-03-01", "2025-03-02", "2025-03-03", "2025-03-04", "2025-03-05", "2025-03-06", "2025-03-07", "2025-03-08", "2025-03-09", "2025-03-10", "2025-03-11", "2025-03-12", "2025-03-13", "2025-03-14", "2025-03-15", "2025-03-16", "2025-03-17", "2025-03-18", "2025-03-19", "2025-03-20", "2025-03-21", "2025-03-22", "2025-03-23", "2025-03-24", "2025-03-25", "2025-03-26", "2025-03-27", "2025-03-28", "2025-03-29", "2025-03-30", "2025-03-31", "2025-04-01", "2025-04-02", "2025-04-03", "2025-04-04", "2025-04-05", "2025-04-06", "2025-04-07", "2025-04-08", "2025-04-09", "2025-04-10", "2025-04-11", "2025-04-12", "2025-04-13", "2025-04-14", "2025-04-15", "2025-04-16", "2025-04-17", "2025-04-18", "2025-04-19", "2025-04-20", "2025-04-21", "2025-04-22", "2025-04-23", "2025-04-24", "2025-04-25", "2025-04-26", "2025-04-27", "2025-04-28", "2025-04-29", "2025-04-30", "2025-05-01", "2025-05-02", "2025-05-03", "2025-05-04", "2025-05-05", "2025-05-06", "2025-05-07", "2025-05-08", "2025-05-09", "2025-05-10", "2025-05-11", "2025-05-12", "2025-05-13", "2025-05-14", "2025-05-15", "2025-05-16", "2025-05-17", "2025-05-18", "2025-05-19", "2025-05-20", "2025-05-21", "2025-05-22", "2025-05-23", "2025-05-24", "2025-05-25", "2025-05-26", "2025-05-27", "2025-05-28", "2025-05-29", "2025-05-30"], "orders": [3453, 3142, 3229, 3879, 3714, 3260, 3272, 3021, 3449, 3398, 3824, 3907, 3420, 3317, 3332, 3163, 3476, 4036, 4073, 3200, 3689, 3476, 3407, 3782, 4111, 3914, 3453, 3182, 3695, 3487, 3451, 4378, 3984, 3678, 3301, 3523, 3454, 3866, 4582, 4282, 3809, 3668, 3792, 3606, 3475, 4147, 4489, 4104, 3820, 3713, 4090, 3851, 4532, 4569, 3832, 3818, 3661, 3963, 3886, 4796, 4575, 3650, 3934, 4216, 3915, 3851, 4537, 4573, 3976, 3856, 4270, 4015, 4086, 5032, 5056, 4074, 4167, 4240, 4113, 3887, 5014, 5064, 4252, 4064, 4185, 4138, 4193, 5210, 5259, 4375, 4369, 4400, 4309, 4312, 5014, 5121, 4698, 4502, 4332, 4325, 4278, 5271, 5288, 4227, 4529, 4383, 4694, 4516, 5573, 5261, 4485, 4585, 4711, 4649, 4392, 5442, 5432, 4549, 4528, 4899, 4591, 4534, 5610, 5548, 4686, 4827, 4795, 4788, 4890, 5657, 5536, 4728, 4716, 4838, 4657, 4556, 5727, 5528, 4574, 4935, 4784, 4977, 4835, 5646, 5642, 4874, 4922, 4852, 4945, 4769], "gmv": [984855, 811357, 911742, 1147649, 1121316, 1015121, 858773, 898205, 1049076, 1022514, 1041667, 1143397, 1075630, 876636, 979689, 960596, 961805, 1194763, 1105220, 881175, 1016055, 1010485, 976406, 1143673, 1126896, 1120917, 1045935, 945168, 993544, 1042162, 972666, 1291256, 1170521, 1131792, 961621, 922642, 930108, 1163410, 1311487, 1315878, 1121639, 1024353, 1163665, 1004851, 903905, 1335322, 1178422, 1234709, 1167108, 1090817, 1089823, 1182530, 1225257, 1242584, 1099107, 1161474, 1087385, 1207972, 1111903, 1392455, 1262685, 1052788, 1188930, 1218251, 1177329, 1098019, 1292923, 1347118, 1157828, 1168937, 1268490, 1287351, 1190546, 1466274, 1412297, 1203495, 1272784, 1205140, 1212203, 1190908, 1473287, 1458865, 1320684, 1209431, 1264806, 1299250, 1315442, 1518558, 1519486, 1317798, 1289243, 1182354, 1363710, 1284000, 1547637, 1434689, 1490248, 1301961, 1284608, 1199181, 1265940, 1555525, 1564777, 1290939, 1358088, 1375082, 1371614, 1284451, 1667498, 1625946, 1428180, 1431016, 1288703, 1421774, 1415136, 1640082, 1590652, 1389001, 1328018, 1521433, 1381489, 1460567, 1732752, 1612536, 1456005, 1524457, 1406785, 1415620, 1308581, 1786857, 1625554, 1280100, 1302496, 1449020, 1464144, 1374932, 1777270, 1585799, 1296285, 1564116, 1488657, 1510363, 1563116, 1636927, 1681456, 1558991, 1634912, 1479171, 1632140, 1411444], "aov": [285.2, 258.2, 282.4, 295.9, 301.9, 311.4, 262.5, 297.3, 304.2, 300.9, 272.4, 292.7, 314.5, 264.3, 294.0, 303.7, 276.7, 296.0, 271.4, 275.4, 275.4, 290.7, 286.6, 302.4, 274.1, 286.4, 302.9, 297.0, 268.9, 298.9, 281.9, 294.9, 293.8, 307.7, 291.3, 261.9, 269.3, 300.9, 286.2, 307.3, 294.5, 279.3, 306.9, 278.7, 260.1, 322.0, 262.5, 300.9, 305.5, 293.8, 266.5, 307.1, 270.4, 272.0, 286.8, 304.2, 297.0, 304.8, 286.1, 290.3, 276.0, 288.4, 302.2, 289.0, 300.7, 285.1, 285.0, 294.6, 291.2, 303.1, 297.1, 320.6, 291.4, 291.4, 279.3, 295.4, 305.4, 284.2, 294.7, 306.4, 293.8, 288.1, 310.6, 297.6, 302.2, 314.0, 313.7, 291.5, 288.9, 301.2, 295.1, 268.7, 316.5, 297.8, 308.7, 280.2, 317.2, 289.2, 296.5, 277.3, 295.9, 295.1, 295.9, 305.4, 299.9, 313.7, 292.2, 284.4, 299.2, 309.1, 318.4, 312.1, 273.6, 305.8, 322.2, 301.4, 292.8, 305.3, 293.3, 310.6, 300.9, 322.1, 308.9, 290.7, 310.7, 315.8, 293.4, 295.7, 267.6, 315.9, 293.6, 270.7, 276.2, 299.5, 314.4, 301.8, 310.3, 286.9, 283.4, 316.9, 311.2, 303.5, 323.3, 289.9, 298.0, 319.9, 332.2, 304.9, 330.1, 296.0], "delivery_min": [14.9, 14.3, 12.7, 14.7, 15.4, 14.2, 14.3, 15.9, 12.9, 12.6, 13.5, 12.9, 15.7, 14.5, 13.2, 13.5, 17.3, 13.4, 13.2, 14.4, 14.7, 14.3, 13.0, 12.7, 14.6, 13.9, 12.1, 15.2, 14.7, 13.6, 13.5, 14.0, 13.0, 12.2, 14.1, 12.1, 14.1, 12.0, 13.5, 13.4, 15.5, 12.4, 12.0, 12.8, 12.2, 12.8, 13.9, 14.2, 15.2, 12.5, 16.2, 15.5, 13.1, 10.7, 13.1, 13.3, 10.7, 13.2, 12.9, 12.2, 13.8, 14.2, 12.5, 13.3, 12.3, 12.1, 13.0, 13.5, 12.3, 10.4, 13.5, 11.1, 12.9, 14.7, 12.7, 11.4, 11.1, 14.0, 12.6, 13.2, 13.6, 12.5, 12.2, 11.5, 9.1, 10.8, 12.4, 12.3, 12.9, 12.3, 12.6, 13.2, 11.4, 12.0, 10.5, 13.3, 12.3, 12.8, 13.9, 13.4, 12.1, 13.0, 10.5, 12.6, 12.2, 10.3, 13.5, 11.2, 12.7, 11.5, 13.0, 13.3, 11.0, 10.2, 11.7, 12.7, 11.4, 11.1, 12.3, 8.7, 11.0, 10.1, 12.0, 10.8, 10.4, 11.2, 9.9, 11.5, 10.7, 11.1, 10.7, 12.4, 11.3, 12.0, 11.9, 10.4, 11.9, 11.7, 11.6, 10.8, 10.7, 12.1, 13.6, 10.2, 11.7, 10.7, 11.9, 11.5, 12.2, 7.9], "on_time": [89.8, 89.1, 90.9, 89.7, 89.9, 92.5, 95.0, 85.6, 90.6, 91.9, 91.3, 90.7, 88.7, 89.6, 92.9, 93.7, 91.7, 89.9, 91.8, 91.2, 92.8, 91.9, 90.5, 92.2, 89.4, 93.5, 94.2, 89.5, 92.8, 90.0, 94.2, 93.8, 91.6, 94.1, 91.3, 90.9, 91.1, 92.0, 91.6, 92.6, 91.1, 93.9, 94.5, 91.5, 89.6, 94.0, 94.8, 92.3, 90.0, 93.2, 95.7, 89.0, 93.7, 92.2, 91.1, 93.8, 90.3, 93.5, 95.6, 93.3, 91.3, 89.5, 90.5, 89.4, 96.3, 92.7, 91.1, 90.7, 91.1, 92.6, 90.8, 96.7, 91.9, 91.9, 94.1, 96.4, 96.2, 92.6, 94.1, 93.9, 94.7, 94.2, 91.9, 91.3, 94.2, 91.5, 96.6, 94.0, 91.9, 93.3, 93.0, 93.8, 96.0, 91.2, 90.4, 94.9, 93.9, 94.6, 95.2, 94.0, 96.0, 92.6, 94.6, 92.8, 92.2, 95.8, 95.7, 90.7, 92.4, 95.2, 96.8, 93.4, 94.4, 92.0, 99.0, 95.8, 96.7, 96.2, 96.8, 96.2, 94.4, 96.5, 95.3, 97.7, 93.7, 94.1, 96.6, 97.8, 95.6, 93.9, 95.1, 94.4, 99.0, 97.3, 98.0, 96.1, 94.5, 97.9, 98.9, 96.8, 95.6, 97.9, 95.0, 97.3, 94.4, 93.9, 97.0, 96.6, 99.0, 95.4], "stockout": [6.82, 5.76, 5.08, 5.15, 7.15, 5.66, 7.71, 7.96, 6.41, 8.14, 6.84, 7.63, 6.4, 7.45, 5.72, 7.11, 6.12, 6.4, 7.07, 6.64, 6.4, 7.1, 7.15, 5.17, 6.9, 6.98, 5.69, 6.69, 5.14, 7.61, 6.08, 6.21, 7.34, 6.12, 6.77, 5.27, 5.68, 4.93, 5.98, 7.07, 6.33, 6.91, 5.17, 5.28, 5.64, 6.56, 6.35, 6.0, 6.55, 5.84, 5.94, 7.12, 5.4, 6.08, 7.34, 5.97, 6.5, 5.3, 7.59, 3.79, 4.77, 4.83, 7.22, 6.06, 5.49, 4.56, 6.02, 5.78, 5.04, 4.3, 4.63, 5.8, 5.87, 5.64, 5.42, 3.95, 5.57, 4.58, 5.53, 5.89, 4.85, 4.52, 6.32, 5.72, 4.82, 2.67, 5.31, 5.91, 6.33, 4.7, 4.71, 4.87, 6.01, 4.18, 5.12, 4.37, 5.43, 3.77, 5.49, 4.69, 4.92, 5.58, 6.12, 3.54, 5.96, 5.54, 4.76, 6.27, 5.16, 6.14, 4.42, 4.16, 6.02, 6.85, 5.46, 5.67, 4.43, 3.64, 4.62, 6.15, 3.11, 4.32, 3.03, 4.83, 5.51, 3.58, 4.32, 5.86, 4.57, 3.52, 3.43, 2.79, 5.28, 3.9, 5.5, 5.32, 3.92, 4.03, 5.19, 4.6, 4.69, 2.95, 5.23, 3.61, 2.34, 3.81, 4.73, 6.22, 3.98, 3.1], "repeat_rate": [63.3, 58.5, 57.5, 55.5, 55.7, 62.0, 57.7, 57.1, 57.2, 62.5, 57.1, 60.2, 59.4, 59.4, 56.7, 60.6, 63.0, 58.9, 56.8, 55.9, 59.7, 58.6, 59.1, 59.4, 55.8, 61.5, 60.2, 59.4, 60.3, 62.1, 59.9, 57.7, 62.8, 58.9, 58.2, 56.2, 60.2, 57.6, 59.0, 61.5, 60.5, 63.0, 61.3, 59.6, 59.8, 59.4, 62.4, 60.9, 59.9, 63.1, 61.3, 59.9, 57.4, 62.3, 61.9, 61.5, 60.3, 59.4, 60.9, 62.1, 61.3, 61.3, 60.6, 62.7, 62.4, 60.0, 63.9, 64.0, 64.1, 61.8, 61.7, 59.4, 64.2, 57.1, 61.5, 61.7, 64.7, 62.6, 60.3, 59.2, 61.0, 63.2, 63.1, 62.5, 61.4, 62.6, 65.7, 60.5, 63.4, 67.4, 64.8, 62.4, 65.2, 61.7, 63.7, 67.6, 68.5, 59.6, 65.7, 68.9, 62.7, 64.7, 67.9, 63.0, 65.4, 64.2, 59.6, 65.3, 64.1, 66.9, 69.9, 66.4, 63.8, 66.0, 65.4, 67.5, 61.4, 62.2, 60.0, 66.7, 65.2, 63.7, 63.6, 64.0, 63.2, 64.7, 64.4, 69.1, 66.5, 63.7, 64.4, 68.9, 67.1, 66.8, 67.9, 70.1, 63.2, 64.4, 62.0, 67.6, 65.5, 64.8, 64.7, 68.4, 66.3, 65.4, 70.0, 64.3, 63.8, 73.5], "margin": [17.1, 16.7, 16.3, 17.9, 20.2, 20.2, 19.8, 17.8, 14.8, 19.3, 22.5, 21.4, 18.4, 20.9, 18.0, 18.9, 16.0, 18.4, 19.6, 18.9, 21.3, 24.1, 22.8, 18.8, 17.8, 18.0, 17.3, 19.9, 20.9, 20.4, 20.5, 20.5, 19.8, 18.4, 24.6, 23.0, 18.1, 18.2, 19.1, 20.7, 23.8, 23.3, 23.5, 23.6, 23.7, 22.9, 22.2, 20.9, 16.9, 21.0, 25.9, 20.1, 19.9, 24.1, 21.8, 20.5, 25.7, 23.4, 23.8, 20.5, 23.3, 23.0, 24.1, 25.1, 25.1, 22.8, 24.2, 19.6, 24.2, 24.3, 21.7, 20.8, 22.7, 19.9, 23.8, 23.8, 20.7, 23.3, 25.9, 26.0, 25.9, 23.1, 22.7, 22.6, 25.1, 29.6, 27.3, 27.8, 27.3, 19.9, 23.5, 23.0, 27.3, 28.5, 22.6, 24.5, 25.8, 23.3, 23.0, 23.0, 26.9, 22.5, 27.7, 25.1, 26.9, 28.9, 23.4, 23.1, 26.3, 22.7, 23.6, 25.2, 25.9, 22.5, 24.7, 27.2, 29.1, 21.0, 29.2, 28.2, 23.3, 22.5, 27.2, 25.2, 26.7, 28.5, 25.5, 26.9, 27.8, 28.9, 31.1, 31.0, 27.5, 26.3, 32.9, 28.7, 28.2, 24.5, 29.2, 25.4, 26.3, 24.1, 26.2, 27.8, 23.9, 25.5, 27.6, 24.7, 24.8, 25.9], "csat": [3.98, 4.23, 4.04, 4.25, 4.27, 4.02, 4.17, 4.11, 4.03, 4.13, 4.14, 4.26, 4.3, 4.05, 4.13, 4.25, 4.33, 3.9, 4.35, 4.17, 4.38, 4.15, 4.1, 4.21, 4.35, 4.21, 3.93, 4.3, 4.02, 4.1, 4.08, 4.0, 4.08, 4.11, 4.16, 4.23, 4.19, 4.06, 4.22, 4.36, 4.36, 4.26, 4.32, 4.36, 4.42, 4.46, 4.22, 4.23, 4.44, 4.45, 4.45, 3.99, 4.25, 3.88, 4.36, 4.29, 4.29, 4.27, 4.44, 4.25, 4.41, 4.36, 4.34, 4.35, 4.31, 4.17, 4.39, 4.39, 4.29, 4.4, 4.42, 4.16, 4.3, 4.27, 4.22, 4.36, 4.23, 4.28, 4.36, 4.38, 4.38, 4.61, 4.28, 4.37, 4.2, 4.41, 4.49, 4.5, 4.28, 4.33, 4.51, 4.35, 4.48, 4.25, 4.54, 4.5, 4.43, 4.28, 4.36, 4.4, 4.42, 4.37, 4.36, 4.42, 4.56, 4.16, 4.23, 4.22, 4.32, 4.2, 4.47, 4.42, 4.38, 4.33, 4.44, 4.44, 4.46, 4.34, 4.51, 4.25, 4.58, 4.07, 4.37, 4.29, 4.54, 4.27, 4.66, 4.26, 4.69, 4.51, 4.46, 4.51, 4.72, 4.57, 4.2, 4.61, 4.5, 4.28, 4.57, 4.33, 4.5, 4.51, 4.41, 4.56, 4.37, 4.51, 4.43, 4.47, 4.73, 4.51], "discount": [12.7, 13.8, 13.0, 14.0, 14.1, 14.0, 13.9, 13.2, 14.3, 15.0, 13.0, 13.6, 13.8, 15.2, 14.9, 12.7, 13.7, 11.8, 12.4, 13.5, 14.2, 14.6, 13.0, 11.8, 13.8, 13.1, 13.8, 13.5, 14.1, 14.0, 14.2, 12.6, 14.3, 12.5, 13.2, 15.3, 13.5, 11.6, 14.8, 14.2, 14.3, 13.1, 13.3, 12.6, 12.0, 14.6, 12.3, 12.2, 12.2, 14.9, 13.7, 12.2, 12.5, 13.2, 13.6, 10.6, 13.6, 12.2, 11.6, 11.9, 13.3, 14.5, 12.5, 13.0, 11.3, 12.8, 13.2, 10.4, 11.6, 13.1, 10.0, 11.6, 12.8, 10.0, 11.5, 12.1, 13.0, 10.4, 13.2, 12.2, 13.3, 13.2, 12.2, 12.4, 9.7, 10.1, 10.5, 11.2, 12.8, 9.5, 11.2, 10.0, 9.7, 13.3, 11.6, 13.4, 12.8, 10.3, 9.1, 13.8, 10.8, 9.9, 12.1, 11.4, 10.4, 10.8, 11.3, 11.2, 12.0, 10.6, 10.6, 11.7, 11.4, 12.3, 10.6, 10.8, 9.5, 12.7, 9.2, 11.0, 9.7, 11.2, 11.6, 8.7, 10.4, 8.5, 12.3, 10.1, 8.7, 9.7, 12.1, 12.3, 12.0, 9.5, 10.2, 12.3, 9.5, 9.9, 9.2, 8.9, 11.7, 11.0, 10.7, 10.9, 11.4, 11.9, 10.1, 9.6, 8.8, 11.3], "zones": [{"zone": "Koramangala", "orders_30d": 64051, "avg_delivery_min": 15.9, "stockout_pct": 3.2, "repeat_rate_pct": 63.9, "csat": 3.92}, {"zone": "Indiranagar", "orders_30d": 21394, "avg_delivery_min": 9.9, "stockout_pct": 4.2, "repeat_rate_pct": 53.5, "csat": 4.51}, {"zone": "HSR Layout", "orders_30d": 25496, "avg_delivery_min": 15.5, "stockout_pct": 4.4, "repeat_rate_pct": 57.0, "csat": 3.99}, {"zone": "Whitefield", "orders_30d": 20930, "avg_delivery_min": 9.7, "stockout_pct": 7.0, "repeat_rate_pct": 63.2, "csat": 3.94}, {"zone": "Jayanagar", "orders_30d": 18093, "avg_delivery_min": 12.8, "stockout_pct": 4.8, "repeat_rate_pct": 68.7, "csat": 4.47}]};
+
+function avg(arr){ return arr.reduce((a,b)=>a+b,0)/arr.length; }
+function last(arr,n){ return arr.slice(-n); }
+function inr(n){ return '₹'+Math.round(n).toLocaleString('en-IN'); }
+
+function pctDelta(curr, prevArr){
+  const p = avg(prevArr);
+  if(!p) return 0;
+  return (((curr-p)/p)*100).toFixed(1);
+}
+
+function renderGrowthKPIs(range){
+  const orders = last(DATA.orders, range), gmv = last(DATA.gmv, range), aov = last(DATA.aov, range), margin = last(DATA.margin, range);
+  const prevOrders = DATA.orders.slice(-range*2,-range);
+  const prevGmv = DATA.gmv.slice(-range*2,-range);
+
+  const totalOrders = orders.reduce((a,b)=>a+b,0);
+  const totalGmv = gmv.reduce((a,b)=>a+b,0);
+  const prevTotalOrders = prevOrders.reduce((a,b)=>a+b,0)||totalOrders;
+  const prevTotalGmv = prevGmv.reduce((a,b)=>a+b,0)||totalGmv;
+
+  const kpis = [
+    {label:'GMV', value: inr(totalGmv), delta: (((totalGmv-prevTotalGmv)/prevTotalGmv)*100).toFixed(1)+'% vs prior period', dir:'up'},
+    {label:'Total Orders', value: totalOrders.toLocaleString('en-IN'), delta: (((totalOrders-prevTotalOrders)/prevTotalOrders)*100).toFixed(1)+'% vs prior period', dir:'up'},
+    {label:'AOV', value: inr(avg(aov)), delta: 'per order', dir:'flat'},
+    {label:'Contribution Margin', value: inr(avg(margin))+'/order', delta: avg(margin)>=20?'healthy':'below target', dir: avg(margin)>=20?'up':'down'},
+  ];
+  document.getElementById('kpiGrowth').innerHTML = kpis.map(k=>`
+    <div class="kpi"><div class="label">${k.label}</div><div class="value">${k.value}</div><div class="delta ${k.dir}">${k.delta}</div></div>`).join('');
+}
+
+function renderOpsKPIs(range){
+  const dm = last(DATA.delivery_min, range), ot = last(DATA.on_time, range), so = last(DATA.stockout, range), rr = last(DATA.repeat_rate, range);
+  const kpis = [
+    {label:'Avg Delivery Time', value: avg(dm).toFixed(1)+' min', delta: 'target < 15 min', dir: avg(dm)<15?'up':'down'},
+    {label:'On-Time Delivery', value: avg(ot).toFixed(1)+'%', delta: 'target 92%', dir: avg(ot)>=92?'up':'down'},
+    {label:'Stockout Rate', value: avg(so).toFixed(1)+'%', delta: 'lower is better', dir: avg(so)<=5?'up':'down'},
+    {label:'Repeat Order Rate', value: avg(rr).toFixed(1)+'%', delta: 'target 65%', dir: avg(rr)>=65?'up':'down'},
+  ];
+  document.getElementById('kpiOps').innerHTML = kpis.map(k=>`
+    <div class="kpi"><div class="label">${k.label}</div><div class="value">${k.value}</div><div class="delta ${k.dir}">${k.delta}</div></div>`).join('');
+}
+
+function renderZoneTable(){
+  document.getElementById('zoneTable').innerHTML = DATA.zones.map(z=>{
+    let status = 'good', label='On Target';
+    if(z.stockout_pct>6 || z.avg_delivery_min>15){ status='bad'; label='Needs Intervention'; }
+    else if(z.repeat_rate_pct<55){ status='warn'; label='Watch'; }
+    return `<tr>
+      <td>${z.zone}</td><td>${z.orders_30d.toLocaleString('en-IN')}</td>
+      <td>${z.avg_delivery_min} min</td><td>${z.stockout_pct}%</td>
+      <td>${z.repeat_rate_pct}%</td><td>${z.csat}</td>
+      <td><span class="tag ${status}">${label}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+let charts = {};
+function destroyAll(){ Object.values(charts).forEach(c=>c && c.destroy()); }
+
+function renderCharts(range){
+  destroyAll();
+  const dates = last(DATA.dates, range);
+  const orders = last(DATA.orders, range);
+  const gmv = last(DATA.gmv, range);
+  const dmin = last(DATA.delivery_min, range);
+  const ontime = last(DATA.on_time, range);
+  const stockout = last(DATA.stockout, range);
+  const repeat = last(DATA.repeat_rate, range);
+  const margin = last(DATA.margin, range);
+  const discount = last(DATA.discount, range);
+  const csat = last(DATA.csat, range);
+
+  charts.gmv = new Chart(document.getElementById('gmvChart'), {
+    type:'line',
+    data:{ labels: dates, datasets:[
+      { label:'GMV (₹)', data: gmv, borderColor:'#0e7c86', backgroundColor:'rgba(14,124,134,0.08)', fill:true, tension:.3, pointRadius:0, borderWidth:2, yAxisID:'y' },
+      { label:'Orders', data: orders, borderColor:'#1f3b57', pointRadius:0, tension:.3, borderWidth:2, yAxisID:'y1' }
+    ]},
+    options:{ responsive:true, interaction:{mode:'index',intersect:false}, scales:{ x:{ticks:{maxTicksLimit:8}}, y:{position:'left'}, y1:{position:'right', grid:{drawOnChartArea:false}} } }
+  });
+
+  charts.zone = new Chart(document.getElementById('zoneChart'), {
+    type:'doughnut',
+    data:{ labels: DATA.zones.map(z=>z.zone), datasets:[{ data: DATA.zones.map(z=>z.orders_30d), backgroundColor:['#1f3b57','#0e7c86','#4a9ba3','#8fc4c9','#c9822f'] }]},
+    options:{ responsive:true, plugins:{legend:{position:'bottom', labels:{boxWidth:10,font:{size:11}}}} }
+  });
+
+  charts.delivery = new Chart(document.getElementById('deliveryChart'), {
+    type:'line',
+    data:{ labels: dates, datasets:[
+      { label:'Avg Delivery (min)', data: dmin, borderColor:'#b8862f', yAxisID:'y', pointRadius:0, tension:.3, borderWidth:2 },
+      { label:'On-Time %', data: ontime, borderColor:'#1f8a55', yAxisID:'y1', pointRadius:0, tension:.3, borderWidth:2 }
+    ]},
+    options:{ responsive:true, interaction:{mode:'index',intersect:false}, scales:{ x:{ticks:{maxTicksLimit:6}}, y:{position:'left', title:{display:true,text:'min'}}, y1:{position:'right', grid:{drawOnChartArea:false}, title:{display:true,text:'%'}} } }
+  });
+
+  charts.stockoutc = new Chart(document.getElementById('stockoutChart'), {
+    type:'line',
+    data:{ labels: dates, datasets:[
+      { label:'Stockout %', data: stockout, borderColor:'#c04a4a', yAxisID:'y', pointRadius:0, tension:.3, borderWidth:2 },
+      { label:'Repeat Rate %', data: repeat, borderColor:'#1f3b57', yAxisID:'y1', pointRadius:0, tension:.3, borderWidth:2 }
+    ]},
+    options:{ responsive:true, interaction:{mode:'index',intersect:false}, scales:{ x:{ticks:{maxTicksLimit:6}}, y:{position:'left', title:{display:true,text:'%'}}, y1:{position:'right', grid:{drawOnChartArea:false}, title:{display:true,text:'%'}} } }
+  });
+
+  charts.marginc = new Chart(document.getElementById('marginChart'), {
+    type:'line',
+    data:{ labels: dates, datasets:[{ label:'Contribution Margin (₹/order)', data: margin, borderColor:'#0e7c86', backgroundColor:'rgba(14,124,134,0.08)', fill:true, pointRadius:0, tension:.3, borderWidth:2 }]},
+    options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ x:{ticks:{maxTicksLimit:6}} } }
+  });
+
+  charts.discountc = new Chart(document.getElementById('discountChart'), {
+    type:'line',
+    data:{ labels: dates, datasets:[
+      { label:'Discount % of GMV', data: discount, borderColor:'#b8862f', yAxisID:'y', pointRadius:0, tension:.3, borderWidth:2 },
+      { label:'CSAT', data: csat, borderColor:'#1f3b57', yAxisID:'y1', pointRadius:0, tension:.3, borderWidth:2 }
+    ]},
+    options:{ responsive:true, interaction:{mode:'index',intersect:false}, scales:{ x:{ticks:{maxTicksLimit:6}}, y:{position:'left', title:{display:true,text:'%'}}, y1:{position:'right', min:3, max:5, grid:{drawOnChartArea:false}, title:{display:true,text:'CSAT'}} } }
+  });
+}
+
+function refresh(){
+  const range = parseInt(document.getElementById('rangeSelect').value);
+  renderGrowthKPIs(range);
+  renderOpsKPIs(range);
+  renderCharts(range);
+  renderZoneTable();
+}
+document.getElementById('rangeSelect').addEventListener('change', refresh);
+refresh();
+</script>
+</body>
+</html>
